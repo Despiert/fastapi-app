@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import APIRouter, status
 
 from app.schemas.item import ItemAdd, ItemUpdate
@@ -7,11 +5,10 @@ from app.core.database import SessionDep
 from app.services.item_service import ItemService
 
 
-logger = logging.getLogger(__name__)
 item_router = APIRouter(prefix='/items', tags=['items'])
 
 
-@item_router.post('/item', response_model=ItemAdd, status_code=status.HTTP_200_OK)
+@item_router.post('/item', response_model=ItemAdd, status_code=status.HTTP_201_CREATED)
 async def item_add(item: ItemAdd, session: SessionDep):
     return await ItemService.add_new_item(item, session)
 
