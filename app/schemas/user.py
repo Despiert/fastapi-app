@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from datetime import datetime
 
 
@@ -8,9 +8,12 @@ class UserAdd(BaseModel):
     password: str = Field(..., min_length=8, max_length=30)
 
 class UserGet(BaseModel):
+    id: int
     username: str
     email: EmailStr
     registered_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 class UserDel(BaseModel):
     message: str

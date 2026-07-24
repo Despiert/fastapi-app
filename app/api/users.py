@@ -1,19 +1,24 @@
+import bcrypt
 from fastapi import APIRouter
 from fastapi import HTTPException, status
-from app.schemas.user import UserAdd, UserGet, UserDel, UserPatch
-import bcrypt
-from app.core.database import SessionDep
 from sqlalchemy import select
-from app.models.users import User, UserArchive
 
+from app.repository.user_repository import SQLUserRepository
+from app.schemas.user import UserAdd, UserGet, UserDel, UserPatch
+from app.core.database import SessionDep
+from app.models.users import User, UserArchive
+from app.services.user_service import UserService
 
 user_router = APIRouter()
 
+repo = SQLUserRepository()
+service = UserService(repository=repo)
 
-@user_router.get('/', response_model=list[UserGet], status_code=status.HTTP_200_OK)
+@user_router.get('/all', response_model=list[UserGet], status_code=status.HTTP_200_OK)
 async def get_all(session: SessionDep):
-    result = await session.execute(select(User))
-    return result.scalars().all()
+    return await service.get_all(session)
+    # result = await session.execute(select(User))
+    # return result.scalars().all()
 
 @user_router.post('/user', status_code=status.HTTP_201_CREATED)
 async def add_user(user: UserAdd, session: SessionDep):
