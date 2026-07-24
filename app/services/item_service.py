@@ -1,10 +1,11 @@
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
 
 from app.schemas.item import ItemAdd, ItemUpdate
 from app.repository.item_repository import ItemRepository
+from app.configs.constants import ENTITY_ITEM
+from app.utils.exceptions import ErrorHandler
 
 
 logger = logging.getLogger(__name__)
@@ -16,8 +17,7 @@ class ItemService:
         logger.info(f'Попытка добавления товара: "{item_date.name}"')
         existing = await ItemRepository.find_by_name(item_date.name, session)
         if existing:
-            logger.warning(f'Товар "{item_date.name}" уже существует')
-            raise HTTPException(status_code=400, detail='Товар уже внесен в базу данных')
+            raise ErrorHandler.raise_already_exists(ENTITY_ITEM, item_date.name)
         item_model = await ItemRepository.add_one(item_date, session)
         logger.info(f'Товар "{item_date.name}" добавлен с id "{item_model.id}"')
         return item_model
@@ -27,8 +27,7 @@ class ItemService:
         logger.info(f'Попытка поиска товара с id: "{item_id}"')
         item = await ItemRepository.find_by_id(item_id, session)
         if item is None:
-            logger.warning(f'Товар с id: "{item_id}" не найден ')
-            raise HTTPException(status_code=404, detail='Товар не найден')
+            raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_id)
         logger.info(f'Товар с id: "{item_id}" найден')
         return item
 
@@ -48,8 +47,7 @@ class ItemService:
             await session.commit()
             logger.info(f'Товар с id: "{item_id}" удален из базы')
             return 'Товар удален из базы данных'
-        logger.warning(f'Товар с id: "{item_id}" - не найден')
-        raise HTTPException(status_code=404, detail=f'Товар с id: "{item_id}" - не найден')
+        raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_id)
 
     @staticmethod
     async def patch_item(item_id: int, data_item: ItemUpdate, session: AsyncSession):
@@ -63,16 +61,14 @@ class ItemService:
             await session.refresh(existing)
             logger.info(f'Товар с id: "{item_id}" изменен')
             return existing
-        logger.warning(f'Товар с id: "{item_id}" не найден')
-        raise HTTPException(status_code=400, detail='Товар не найден')
+        raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_id)
 
     @staticmethod
     async def search_items(item_search: str, session: AsyncSession):
         logger.info(f'Попытка поиска товара "{item_search}"')
         items = await ItemRepository.search_items(item_search, session)
         if not items:
-            logger.warning(f'Товар "{item_search}" не найден')
-            raise HTTPException(status_code=404, detail='Товары не найдены')
+            raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_search)
         logger.info(f'Товар "{item_search}" найден')
         return items
 
@@ -83,6 +79,5 @@ class ItemService:
         if result.get('added'):
             logger.info(f'Товары добавлены "{len(result["added"])}"')
             return result
-        logger.warning('Все товары уже были в базе')
-        raise HTTPException(status_code=400, detail='Все товары уже были в базе')
+        raise ErrorHandler.raise_already_exists(ENTITY_ITEM)
 
