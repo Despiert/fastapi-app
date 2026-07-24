@@ -17,8 +17,6 @@ service = UserService(repository=repo)
 @user_router.get('/all', response_model=list[UserGet], status_code=status.HTTP_200_OK)
 async def get_all(session: SessionDep):
     return await service.get_all(session)
-    # result = await session.execute(select(User))
-    # return result.scalars().all()
 
 @user_router.post('/user', status_code=status.HTTP_201_CREATED)
 async def add_user(user: UserAdd, session: SessionDep):
