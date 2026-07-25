@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.configs.constants import ENTITY_USER, ENTITY_USERS
 from app.repository.user_repository import UserRepository
 from app.schemas.user import UserGet
+from app.utils.exceptions import ErrorHandler
 
 logger = logging.getLogger(__name__)
 
@@ -16,3 +17,11 @@ class UserService:
     async def get_all(self, session: AsyncSession) -> list[UserGet]:
         logger.info(f'Поиск {ENTITY_USERS}')
         return await self.repository.get_all(session)
+
+    async def get_user(self, user_id: int, session: AsyncSession) -> UserGet:
+        logger.info(f'Поиск {ENTITY_USER} с id: {user_id}')
+        result = await self.repository.get_user(user_id, session)
+        if result is None:
+            logger.warning(f'{ENTITY_USER} с id: {user_id} не  найден')
+            raise ErrorHandler.raise_not_found(ENTITY_USER, user_id)
+        return result
