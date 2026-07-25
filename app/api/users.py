@@ -9,7 +9,7 @@ from app.core.database import SessionDep
 from app.models.users import User, UserArchive
 from app.services.user_service import UserService
 
-user_router = APIRouter()
+user_router = APIRouter(prefix="/users", tags=["users"])
 
 repo = SQLUserRepository()
 service = UserService(repository=repo)
@@ -31,17 +31,12 @@ async def add_user(user: UserAdd, session: SessionDep):
     await session.commit()
     return 'Регистрация завершена'
 
-@user_router.get('/users/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
+@user_router.get('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def get_user(user_id: int, session: SessionDep):
-    stmt = select(User).where(User.id == user_id)
-    result = await session.execute(stmt)
-    user = result.scalar_one_or_none()
-    if user is not None:
-        return user
-    raise HTTPException(status_code=404, detail="User not found")
+    return await service.get_user(user_id, session)
 
 
-@user_router.delete('/users/{user_id}',response_model=UserDel, status_code=status.HTTP_200_OK)
+@user_router.delete('/{user_id}',response_model=UserDel, status_code=status.HTTP_200_OK)
 async def user_del(user_id: int, session: SessionDep):
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
@@ -63,7 +58,7 @@ async def user_del(user_id: int, session: SessionDep):
         return {'message': 'Пользователь удален', 'user_id': user_id}
     raise HTTPException(status_code=404, detail="User not found")
 
-@user_router.patch('/users/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
+@user_router.patch('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def user_patch(user_id: int, user: UserPatch, session: SessionDep):
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
@@ -79,7 +74,7 @@ async def user_patch(user_id: int, user: UserPatch, session: SessionDep):
     await session.refresh(user_res)
     return user_res
 
-@user_router.put('/users/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
+@user_router.put('//{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def user_up(user_id: int, user: UserAdd, session: SessionDep):
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
