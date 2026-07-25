@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from sqlalchemy import select
 
-from app.models.users import User
-from app.schemas.user import UserGet
+from app.models.users import User, UserArchive
+from app.schemas.user import UserGet, UserArchiveAdd
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -11,7 +11,12 @@ class UserRepository(ABC):
     async def get_all(self, session: AsyncSession) -> list[UserGet]:
         pass
 
+    @abstractmethod
     async def get_user(self, user_id: int, session: AsyncSession):
+        pass
+
+    @abstractmethod
+    async def del_user(self, user_id: int, session: AsyncSession):
         pass
 
 
@@ -30,3 +35,16 @@ class SQLUserRepository(UserRepository):
             return None
         return UserGet.model_validate(result)
 
+    async def del_user(self, user_id: int, session: AsyncSession):
+        user = await session.get(User, user_id)
+        if user is None or user.is_active == False:
+            return None
+        archive_user = UserArchiveAdd.model_validate(user).model_dump()
+        archive_user['is_active'] = False
+        user_archive = UserArchive(**archive_user)
+        session.add(user_archive)
+
+        await session.delete(user)
+        await session.commit()
+
+        return user_archive

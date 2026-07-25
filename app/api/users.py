@@ -9,14 +9,17 @@ from app.core.database import SessionDep
 from app.models.users import User, UserArchive
 from app.services.user_service import UserService
 
+
 user_router = APIRouter(prefix="/users", tags=["users"])
 
 repo = SQLUserRepository()
 service = UserService(repository=repo)
 
+
 @user_router.get('/all', response_model=list[UserGet], status_code=status.HTTP_200_OK)
 async def get_all(session: SessionDep):
     return await service.get_all(session)
+
 
 @user_router.post('/user', status_code=status.HTTP_201_CREATED)
 async def add_user(user: UserAdd, session: SessionDep):
@@ -31,6 +34,7 @@ async def add_user(user: UserAdd, session: SessionDep):
     await session.commit()
     return 'Регистрация завершена'
 
+
 @user_router.get('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def get_user(user_id: int, session: SessionDep):
     return await service.get_user(user_id, session)
@@ -38,25 +42,8 @@ async def get_user(user_id: int, session: SessionDep):
 
 @user_router.delete('/{user_id}',response_model=UserDel, status_code=status.HTTP_200_OK)
 async def user_del(user_id: int, session: SessionDep):
-    stmt = select(User).where(User.id == user_id)
-    result = await session.execute(stmt)
-    user = result.scalar_one_or_none()
-    if user is not None:
-        user.is_active = False
-        user_archive = UserArchive(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            password=user.password,
-            is_active=False,
-            registered_at=user.registered_at
-        )
+    return await service.del_user(user_id, session)
 
-        session.add(user_archive)
-        await session.delete(user)
-        await session.commit()
-        return {'message': 'Пользователь удален', 'user_id': user_id}
-    raise HTTPException(status_code=404, detail="User not found")
 
 @user_router.patch('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def user_patch(user_id: int, user: UserPatch, session: SessionDep):
@@ -73,6 +60,7 @@ async def user_patch(user_id: int, user: UserPatch, session: SessionDep):
     await session.commit()
     await session.refresh(user_res)
     return user_res
+
 
 @user_router.put('//{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def user_up(user_id: int, user: UserAdd, session: SessionDep):

@@ -25,3 +25,12 @@ class UserService:
             logger.warning(f'{ENTITY_USER} с id: {user_id} не  найден')
             raise ErrorHandler.raise_not_found(ENTITY_USER, user_id)
         return result
+
+    async def del_user(self, user_id: int, session: AsyncSession):
+        logger.info(f'Поиск {ENTITY_USER}')
+        result = await self.repository.del_user(user_id, session)
+        if result is None:
+            logger.warning(f'{ENTITY_USER} с id: {user_id} не  найден')
+            raise ErrorHandler.raise_not_found(ENTITY_USER, user_id)
+        logger.info(f'{ENTITY_USER} с id: "{user_id}" удален(внесен в архив)')
+        return {'message': 'Пользователь удален', 'user_id': user_id}
