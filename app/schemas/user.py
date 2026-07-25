@@ -25,3 +25,10 @@ class UserPatch(BaseModel):
     password: str | None = None
     model_config = ConfigDict(extra='forbid')
 
+class UserArchiveAdd(BaseModel):
+    id: int
+    username: str
+    password: str
+    email: EmailStr
+    is_active: bool
+    registered_at: datetime
