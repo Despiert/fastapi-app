@@ -17,9 +17,10 @@ class ItemService:
         logger.info(f'Попытка добавления товара: "{item_date.name}"')
         existing = await ItemRepository.find_by_name(item_date.name, session)
         if existing:
+            logger.warning(f'{ENTITY_ITEM} "{item_date.name}" не добавлен')
             raise ErrorHandler.raise_already_exists(ENTITY_ITEM, item_date.name)
         item_model = await ItemRepository.add_one(item_date, session)
-        logger.info(f'Товар "{item_date.name}" добавлен с id "{item_model.id}"')
+        logger.info(f'{ENTITY_ITEM} "{item_date.name}" добавлен с id "{item_model.id}"')
         return item_model
 
     @staticmethod
@@ -27,8 +28,9 @@ class ItemService:
         logger.info(f'Попытка поиска товара с id: "{item_id}"')
         item = await ItemRepository.find_by_id(item_id, session)
         if item is None:
+            logger.warning(f'{ENTITY_ITEM} с id: "{item_id}" не найден')
             raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_id)
-        logger.info(f'Товар с id: "{item_id}" найден')
+        logger.info(f'{ENTITY_ITEM} с id: "{item_id}" найден')
         return item
 
     @staticmethod
@@ -45,8 +47,9 @@ class ItemService:
         if existing:
             await session.delete(existing)
             await session.commit()
-            logger.info(f'Товар с id: "{item_id}" удален из базы')
+            logger.info(f'{ENTITY_ITEM} с id: "{item_id}" удален из базы')
             return 'Товар удален из базы данных'
+        logger.warning(f'{ENTITY_ITEM} "{item_id}" не найден')
         raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_id)
 
     @staticmethod
@@ -59,8 +62,9 @@ class ItemService:
             session.add(existing)
             await session.commit()
             await session.refresh(existing)
-            logger.info(f'Товар с id: "{item_id}" изменен')
+            logger.info(f'{ENTITY_ITEM} с id: "{item_id}" изменен')
             return existing
+        logger.warning(f'{ENTITY_ITEM} с {item_id} не найден')
         raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_id)
 
     @staticmethod
@@ -68,8 +72,9 @@ class ItemService:
         logger.info(f'Попытка поиска товара "{item_search}"')
         items = await ItemRepository.search_items(item_search, session)
         if not items:
+            logger.warning(f'{ENTITY_ITEM} не найден')
             raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_search)
-        logger.info(f'Товар "{item_search}" найден')
+        logger.info(f'{ENTITY_ITEM} "{item_search}" найден')
         return items
 
     @staticmethod
@@ -79,5 +84,6 @@ class ItemService:
         if result.get('added'):
             logger.info(f'Товары добавлены "{len(result["added"])}"')
             return result
+        logger.warning(f'Отсутствуют новые товары')
         raise ErrorHandler.raise_already_exists(ENTITY_ITEM)
 
