@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from sqlalchemy import select
 
 from app.models.users import User, UserArchive
-from app.schemas.user import UserGet, UserArchiveAdd, UserAdd
+from app.schemas.user import UserGet, UserArchiveAdd, UserAdd, UserPatch
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -27,6 +27,10 @@ class UserRepository(ABC):
     async def find_by_email(self, email: str, session: AsyncSession):
         pass
 
+    @abstractmethod
+    async def refresh_user(self, user: User, session: AsyncSession):
+        pass
+
 
 
 class SQLUserRepository(UserRepository):
@@ -39,9 +43,7 @@ class SQLUserRepository(UserRepository):
         stmt = select(User).where(User.id == user_id)
         user = await session.execute(stmt)
         result = user.scalar_one_or_none()
-        if result is None:
-            return None
-        return UserGet.model_validate(result)
+        return result
 
     async def del_user(self, user_id: int, session: AsyncSession):
         user = await session.get(User, user_id)
@@ -67,3 +69,8 @@ class SQLUserRepository(UserRepository):
         session.add(new_user)
         await session.commit()
         return UserGet.model_validate(new_user)
+
+    async def refresh_user(self, user: User, session: AsyncSession):
+        await session.commit()
+        await session.refresh(user)
+        return user

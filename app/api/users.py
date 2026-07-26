@@ -43,22 +43,10 @@ async def get_user_by_email(email: str, session: SessionDep):
 
 @user_router.patch('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def user_patch(user_id: int, user: UserPatch, session: SessionDep):
-    stmt = select(User).where(User.id == user_id)
-    result = await session.execute(stmt)
-    user_res = result.scalar_one_or_none()
-    if user_res is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    for key, value in user.model_dump(exclude_unset=True).items():
-        if key == 'password':
-            value = bcrypt.hashpw(value.encode('utf-8'), bcrypt.gensalt())
-        setattr(user_res, key, value)
-    session.add(user_res)
-    await session.commit()
-    await session.refresh(user_res)
-    return user_res
+    return await service.patch_user(user_id, user, session)
 
 
-@user_router.put('//{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
+@user_router.put('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def user_up(user_id: int, user: UserAdd, session: SessionDep):
     stmt = select(User).where(User.id == user_id)
     result = await session.execute(stmt)
