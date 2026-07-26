@@ -1,12 +1,9 @@
-import bcrypt
 from fastapi import APIRouter
-from fastapi import HTTPException, status
-from sqlalchemy import select
+from fastapi import status
 
 from app.repository.user_repository import SQLUserRepository
 from app.schemas.user import UserAdd, UserGet, UserDel, UserPatch
 from app.core.database import SessionDep
-from app.models.users import User, UserArchive
 from app.services.user_service import UserService
 
 
@@ -48,16 +45,4 @@ async def user_patch(user_id: int, user: UserPatch, session: SessionDep):
 
 @user_router.put('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def user_up(user_id: int, user: UserAdd, session: SessionDep):
-    stmt = select(User).where(User.id == user_id)
-    result = await session.execute(stmt)
-    user_upd = result.scalar_one_or_none()
-    if user_upd is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    for key, value in user.model_dump().items():
-        if key == 'password':
-            value = bcrypt.hashpw(value.encode('utf-8'), bcrypt.gensalt())
-        setattr(user_upd, key, value)
-    session.add(user_upd)
-    await session.commit()
-    await session.refresh(user_upd)
-    return user_upd
+    return await service.put_user(user_id, user, session)

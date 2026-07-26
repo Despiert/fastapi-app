@@ -65,3 +65,11 @@ class UserService:
                 value = hash_password(value)
             setattr(result, key, value)
         return await self.repository.refresh_user(result, session)
+
+    async def put_user(self, user_id: int, user: UserAdd, session: AsyncSession):
+        result = await self._get_user_or_404(user_id, session)
+        for key, value in user.model_dump().items():
+            if key == 'password':
+                value = hash_password(value)
+            setattr(result, key, value)
+        return await self.repository.refresh_user(result, session)
