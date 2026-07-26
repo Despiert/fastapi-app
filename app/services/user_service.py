@@ -46,7 +46,9 @@ class UserService:
         if result is not None:
             logger.warning(f'{user.email} уже используется')
             raise ErrorHandler.raise_already_exists(ENTITY_USER, user.email)
-        existing = await self.repository.add_user(user, session)
+        user_data = user.model_dump()
+        user_data['password'] = hash_password(user_data['password'])
+        existing = await self.repository.add_user(user_data, session)
         logger.info('Регистрация пользователя завершена')
         return existing
 

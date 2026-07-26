@@ -64,8 +64,8 @@ class SQLUserRepository(UserRepository):
         result = await session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def add_user(self, user: UserAdd, session: AsyncSession):
-        new_user = User(**user.model_dump())
+    async def add_user(self, user_data: dict, session: AsyncSession):
+        new_user = User(**user_data)
         session.add(new_user)
         await session.commit()
         return UserGet.model_validate(new_user)
