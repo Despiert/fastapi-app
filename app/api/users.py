@@ -36,6 +36,11 @@ async def user_del(user_id: int, session: SessionDep):
     return await service.del_user(user_id, session)
 
 
+@user_router.get('/email/{email}', response_model=UserGet, status_code=status.HTTP_200_OK)
+async def get_user_by_email(email: str, session: SessionDep):
+    return await service.get_user_by_email(email, session)
+
+
 @user_router.patch('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
 async def user_patch(user_id: int, user: UserPatch, session: SessionDep):
     stmt = select(User).where(User.id == user_id)

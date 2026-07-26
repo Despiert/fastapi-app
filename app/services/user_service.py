@@ -44,3 +44,11 @@ class UserService:
         existing = await self.repository.add_user(user, session)
         logger.info('Регистрация пользователя завершена')
         return existing
+
+    async def get_user_by_email(self, email: str, session: AsyncSession) -> UserGet:
+        logger.info('Поиск по email')
+        result = await self.repository.find_by_email(email, session)
+        if result is None:
+            logger.warning(f'{ENTITY_USER} с email {email} не найдет')
+            raise ErrorHandler.raise_not_found(ENTITY_USER, email)
+        return result
