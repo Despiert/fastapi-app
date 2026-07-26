@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.configs.constants import ENTITY_USER, ENTITY_USERS
 from app.repository.user_repository import UserRepository
-from app.schemas.user import UserGet
+from app.schemas.user import UserGet, UserAdd
 from app.utils.exceptions import ErrorHandler
 
 logger = logging.getLogger(__name__)
@@ -34,3 +34,13 @@ class UserService:
             raise ErrorHandler.raise_not_found(ENTITY_USER, user_id)
         logger.info(f'{ENTITY_USER} с id: "{user_id}" удален(внесен в архив)')
         return {'message': 'Пользователь удален', 'user_id': user_id}
+
+    async def add_user(self, user: UserAdd, session: AsyncSession):
+        logger.info('Проверка email')
+        result = await self.repository.find_by_email(user.email, session)
+        if result is not None:
+            logger.warning(f'{user.email} уже используется')
+            raise ErrorHandler.raise_already_exists(ENTITY_USER, user.email)
+        existing = await self.repository.add_user(user, session)
+        logger.info('Регистрация пользователя завершена')
+        return existing

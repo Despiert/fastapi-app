@@ -23,16 +23,7 @@ async def get_all(session: SessionDep):
 
 @user_router.post('/user', status_code=status.HTTP_201_CREATED)
 async def add_user(user: UserAdd, session: SessionDep):
-    stmt = select(User).where(User.email == user.email, User.is_active == True)
-    result = await session.execute(stmt)
-    if result.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=400, detail='email уже зарегистрирован')
-
-    new_user = User(**user.model_dump())
-    new_user.password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
-    session.add(new_user)
-    await session.commit()
-    return 'Регистрация завершена'
+    return await service.add_user(user, session)
 
 
 @user_router.get('/{user_id}', response_model=UserGet, status_code=status.HTTP_200_OK)
