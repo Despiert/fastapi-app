@@ -13,7 +13,6 @@ class UserGet(BaseModel):
     username: str
     email: EmailStr
     registered_at: datetime
-
     model_config = ConfigDict(from_attributes=True)
 
 class UserDel(BaseModel):
