@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from sqlalchemy import select
 
 from app.models.users import User, UserArchive
-from app.schemas.user import UserGet, UserArchiveAdd, UserAdd, UserPatch
+from app.schemas.user import UserGet, UserArchiveAdd, UserAdd
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -47,7 +47,7 @@ class SQLUserRepository(UserRepository):
 
     async def del_user(self, user_id: int, session: AsyncSession):
         user = await session.get(User, user_id)
-        if user is None or user.is_active == False:
+        if user is None or user.is_active == False: # удалить вторую проверку
             return None
         archive_user = UserArchiveAdd.model_validate(user).model_dump()
         archive_user['is_active'] = False
