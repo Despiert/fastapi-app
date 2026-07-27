@@ -3,6 +3,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.configs.constants import ENTITY_USER, ENTITY_USERS
+from app.models.users import User
 from app.repository.user_repository import UserRepository
 from app.schemas.user import UserGet, UserAdd, UserPatch
 from app.utils.exceptions import ErrorHandler
@@ -22,6 +23,14 @@ class UserService:
             logger.warning(f'{ENTITY_USER} с id: {user_id} не  найден')
             raise ErrorHandler.raise_not_found(ENTITY_USER, user_id)
         return result
+
+    @staticmethod
+    def _apply_updates(user: User, data: dict):
+        for key, value in data.items():
+            if key == 'password':
+                value = hash_password(value)
+            setattr(user, key, value)
+
 
     async def get_all(self, session: AsyncSession) -> list[UserGet]:
         logger.info(f'Поиск {ENTITY_USERS}')
@@ -62,16 +71,21 @@ class UserService:
 
     async def patch_user(self, user_id: int, user: UserPatch, session: AsyncSession):
         result = await self._get_user_or_404(user_id, session)
-        for key, value in user.model_dump(exclude_unset=True).items():
-            if key == 'password':
-                value = hash_password(value)
-            setattr(result, key, value)
+        data = user.model_dump(exclude_unset=True)
+        if 'email' in data and data['email'] != result.email:
+            existing = await self.repository.find_by_email(data['email'], session)
+            if existing and existing.id != user_id:
+                logger.warning(f'Email {user.email} уже занят пользователем {existing.id}')
+                raise ErrorHandler.raise_already_exists(user.email)
+        self._apply_updates(result, data)
         return await self.repository.refresh_user(result, session)
 
     async def put_user(self, user_id: int, user: UserAdd, session: AsyncSession):
         result = await self._get_user_or_404(user_id, session)
-        for key, value in user.model_dump().items():
-            if key == 'password':
-                value = hash_password(value)
-            setattr(result, key, value)
+        if user.email != result.email:
+            existing = await self.repository.find_by_email(user.email, session)
+            if existing:
+                logger.warning(f'Email {user.email} уже занят пользователем {existing.id}')
+                raise ErrorHandler.raise_already_exists(user.email)
+        self._apply_updates(result, user.model_dump())
         return await self.repository.refresh_user(result, session)
