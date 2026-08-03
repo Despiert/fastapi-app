@@ -38,7 +38,7 @@ async def item_update(item_id: int, item: ItemUpdate, session: SessionDep):
     return await ItemService.patch_item(item_id, item, session)
 
 
-@item_router.post('/itemall', status_code=status.HTTP_201_CREATED)
+@item_router.post('/bulk', status_code=status.HTTP_201_CREATED)
 async def items_add(items: list[ItemAdd], session: SessionDep):
     return await ItemService.add_all_items(items, session)
 
