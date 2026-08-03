@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ItemAdd(BaseModel):
@@ -6,6 +6,7 @@ class ItemAdd(BaseModel):
     description: str | None = Field(default='No description')
     price: float = Field(ge=0)
     stock_quantity: int = Field(ge=0)
+    model_config = ConfigDict(extra='forbid')
 
 
 class ItemUpdate(BaseModel):
