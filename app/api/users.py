@@ -18,7 +18,7 @@ async def get_all(session: SessionDep):
     return await service.get_all(session)
 
 
-@user_router.post('/user', status_code=status.HTTP_201_CREATED)
+@user_router.post('/user', response_model=UserGet, status_code=status.HTTP_201_CREATED)
 async def add_user(user: UserAdd, session: SessionDep):
     return await service.add_user(user, session)
 
