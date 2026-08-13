@@ -20,7 +20,7 @@ class UserRepository(ABC):
         pass
 
     @abstractmethod
-    async def add_user(self, user: UserAdd, session: AsyncSession):
+    async def add_user(self, user: dict, session: AsyncSession):
         pass
 
     @abstractmethod
