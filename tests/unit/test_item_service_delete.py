@@ -12,13 +12,16 @@ async def test_item_delete_success():
 
     mock_find = AsyncMock()
     mock_raise = AsyncMock()
+    mock_del = AsyncMock()
 
     with patch('app.repository.item_repository.ItemRepository.find_by_id', mock_find):
-        with patch('app.utils.exceptions.ErrorHandler.raise_not_found', mock_raise):
-            mock_find.return_value = item1
+        with patch('app.repository.item_repository.ItemRepository.del_item', mock_del):
+            with patch('app.utils.exceptions.ErrorHandler.raise_not_found', mock_raise):
+                mock_find.return_value = item1
 
-            result = await ItemService.del_item(1, session=AsyncMock())
+                result = await ItemService.del_item(1, session=AsyncMock())
 
+    mock_del.assert_called_once_with(item1, ANY)
     mock_raise.assert_not_called()
     mock_find.assert_called_once_with(1, ANY)
 
