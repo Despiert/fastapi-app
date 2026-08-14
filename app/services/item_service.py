@@ -45,8 +45,7 @@ class ItemService:
         logger.info(f'Попытка поиска товара с id: "{item_id}"')
         existing = await ItemRepository.find_by_id(item_id, session)
         if existing:
-            await session.delete(existing)
-            await session.commit()
+            await ItemRepository.del_item(existing, session)
             logger.info(f'{ENTITY_ITEM} с id: "{item_id}" удален из базы')
             return 'Товар удален из базы данных'
         logger.warning(f'{ENTITY_ITEM} "{item_id}" не найден')

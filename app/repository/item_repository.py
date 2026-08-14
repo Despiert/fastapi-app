@@ -70,3 +70,8 @@ class ItemRepository:
         await session.commit()
         await session.refresh(item)
         return item
+
+    @classmethod
+    async def del_item(cls, item: Item, session: AsyncSession):
+        await session.delete(item)
+        await session.commit()
