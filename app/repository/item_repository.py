@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.schemas.item import ItemAdd
+from app.schemas.item import ItemAdd, ItemUpdate
 from app.models.items import Item
 
 
@@ -61,3 +61,12 @@ class ItemRepository:
             session.add(new_item)
             await session.commit()
         return {'added': added, 'skipped': skipped}
+
+    @classmethod
+    async def patch_item(cls, item: Item, data_item: ItemUpdate, session: AsyncSession):
+        for key, value in data_item.model_dump(exclude_unset=True).items():
+            setattr(item, key, value)
+        session.add(item)
+        await session.commit()
+        await session.refresh(item)
+        return item

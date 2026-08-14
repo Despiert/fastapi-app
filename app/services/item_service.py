@@ -57,13 +57,9 @@ class ItemService:
         logger.info(f'Попытка поиска товара с id: "{item_id}"')
         existing = await ItemRepository.find_by_id(item_id, session)
         if existing:
-            for key, value in data_item.model_dump(exclude_unset=True).items():
-                setattr(existing, key, value)
-            session.add(existing)
-            await session.commit()
-            await session.refresh(existing)
+            item = await ItemRepository.patch_item(existing, data_item, session)
             logger.info(f'{ENTITY_ITEM} с id: "{item_id}" изменен')
-            return existing
+            return item
         logger.warning(f'{ENTITY_ITEM} с {item_id} не найден')
         raise ErrorHandler.raise_not_found(ENTITY_ITEM, item_id)
 
